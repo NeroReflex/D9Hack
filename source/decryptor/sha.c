@@ -86,5 +86,5 @@ void sha_hex2text(u8* hash, u8 hashLength, u8* out) {
 
 void sha_text2sha(u8* hash, u8 hashLength, u8* in) {
   for (u8 i = 0; i < hashLength; i++)
-    hash[i] = text2hex(in[i * 2]) | (text2hex(in[(i * 2)+1]) << 4);
+    hash[i] = (text2hex(in[i * 2]) << 4) | (text2hex(in[(i * 2)+1]));
 }
