@@ -16,7 +16,7 @@ include $(DEVKITARM)/ds_rules
 # INCLUDES is a list of directories containing header files
 # SPECS is the directory containing the important build and link files
 #---------------------------------------------------------------------------------
-export TARGET	:=	Decrypt9WIP
+export TARGET	:=	D9Hack
 BUILD		:=	build
 SOURCES		:=	source source/fatfs source/decryptor source/gamecart
 DATA		:=	data
@@ -25,7 +25,7 @@ INCLUDES	:=	source source/font source/fatfs
 #---------------------------------------------------------------------------------
 # THEME: if set to anything, name of the themes file folder inside resources
 #---------------------------------------------------------------------------------
-THEME	:=	
+THEME	:=
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -114,7 +114,7 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-.PHONY: common clean all gateway firm binary cakehax cakerop brahma release
+.PHONY: common clean all gateway firm binary release
 
 #---------------------------------------------------------------------------------
 all: firm
@@ -122,9 +122,6 @@ all: firm
 common:
 	@[ -d $(OUTPUT_D) ] || mkdir -p $(OUTPUT_D)
 	@[ -d $(BUILD) ] || mkdir -p $(BUILD)
-
-submodules:
-	@-git submodule update --init --recursive
 
 binary: common
 	@make --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
@@ -136,40 +133,23 @@ gateway: binary
 	@cp resources/LauncherTemplate.dat $(OUTPUT_D)/Launcher.dat
 	@dd if=$(OUTPUT).bin of=$(OUTPUT_D)/Launcher.dat bs=1497296 seek=1 conv=notrunc
 
-cakehax: submodules binary
-	@make dir_out=$(OUTPUT_D) name=$(TARGET).dat -C CakeHax bigpayload
-	@dd if=$(OUTPUT).bin of=$(OUTPUT).dat bs=512 seek=160
-
-cakerop: cakehax
-	@make DATNAME=$(TARGET).dat DISPNAME=$(TARGET) GRAPHICS=../resources/CakesROP -C CakesROP
-	@mv CakesROP/CakesROP.nds $(OUTPUT_D)/$(TARGET).nds
-
-brahma: submodules binary
-	@[ -d BrahmaLoader/data ] || mkdir -p BrahmaLoader/data
-	@cp $(OUTPUT).bin BrahmaLoader/data/payload.bin
-	@cp resources/BrahmaAppInfo BrahmaLoader/resources/AppInfo
-	@cp resources/BrahmaIcon.png BrahmaLoader/resources/icon.png
-	@make --no-print-directory -C BrahmaLoader APP_TITLE=$(TARGET)
-	@mv BrahmaLoader/output/*.3dsx $(OUTPUT_D)
-	@mv BrahmaLoader/output/*.smdh $(OUTPUT_D)
-
 release:
 	@rm -fr $(BUILD) $(OUTPUT_D) $(RELEASE)
 	@make --no-print-directory binary
-	@-make --no-print-directory firm
-	@-make --no-print-directory gateway
-	@-make --no-print-directory cakerop
-	@-make --no-print-directory brahma
+	@make --no-print-directory firm
+#	@-make --no-print-directory gateway
+#	@-make --no-print-directory cakerop
+#	@-make --no-print-directory brahma
 	@[ -d $(RELEASE) ] || mkdir -p $(RELEASE)
 	@[ -d $(RELEASE)/$(TARGET) ] || mkdir -p $(RELEASE)/$(TARGET)
 	@[ -d $(RELEASE)/scripts ] || mkdir -p $(RELEASE)/scripts
 	@-cp $(OUTPUT_D)/Launcher.dat $(RELEASE)
 	@cp $(OUTPUT).bin $(RELEASE)
-	@-cp $(OUTPUT).firm $(RELEASE)
-	@-cp $(OUTPUT).dat $(RELEASE)
-	@-cp $(OUTPUT).nds $(RELEASE)
-	@-cp $(OUTPUT).3dsx $(RELEASE)/$(TARGET)
-	@-cp $(OUTPUT).smdh $(RELEASE)/$(TARGET)
+	@cp $(OUTPUT).firm $(RELEASE)
+#	@-cp $(OUTPUT).dat $(RELEASE)
+#	@-cp $(OUTPUT).nds $(RELEASE)
+#	@-cp $(OUTPUT).3dsx $(RELEASE)/$(TARGET)
+#	@-cp $(OUTPUT).smdh $(RELEASE)/$(TARGET)
 	@-cp $(CURDIR)/resources/d9logo.bin $(RELEASE)/d9logo.bin
 	@cp $(CURDIR)/scripts/*.py $(RELEASE)/scripts
 	@cp $(CURDIR)/README.md $(RELEASE)
@@ -179,10 +159,10 @@ release:
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@-make clean --no-print-directory -C CakeHax
-	@-make clean --no-print-directory -C CakesROP
-	@-make clean --no-print-directory -C BrahmaLoader
-	@rm -fr $(BUILD) $(OUTPUT_D) $(RELEASE)
+#	@-make clean --no-print-directory -C CakeHax
+#	@-make clean --no-print-directory -C CakesROP
+#	@-make clean --no-print-directory -C BrahmaLoader
+	@rm -rf $(BUILD) $(OUTPUT_D) $(RELEASE)
 
 
 #---------------------------------------------------------------------------------

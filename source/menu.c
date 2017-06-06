@@ -12,24 +12,24 @@
 u32 ScrollOutput()
 {
     u32 log_start = LogWrite(NULL);
-    
+
     // careful, these areas are used by other functions in Decrypt9
     char** logptr = (char**) 0x21100000;
     char* logtext = (char*)  0x21200000;
     u32 log_size = FileGetData(LOG_FILE, logtext, 1024 * 1024, log_start); // log size
     u32 l_total = 0; // total lines
     u32 l_curr = 0; // current line
-    
+
     // allow 1MB of text max
     if ((log_size == 0) || (log_size >= 1024 * 1024))
         return 0;
-    
+
     // organize lines
     logtext[log_size - 1] = '\0';
     logptr[l_total++] = logtext;
     for (char* line = strchr(logtext, '\n'); line != NULL && l_total < 4000; line = strchr(line, '\n')) {
         *line = '\0';
-        logptr[l_total++] = ++line; 
+        logptr[l_total++] = ++line;
     }
     if (l_total >= 4000) // allow 4000 lines of text max
         return 0;
@@ -50,7 +50,7 @@ u32 ScrollOutput()
             return pad_state;
         }
     }
-    
+
     return 0;
 }
 #endif
@@ -58,7 +58,7 @@ u32 ScrollOutput()
 u32 UnmountSd()
 {
     u32 pad_state;
-    
+
     #ifdef USE_THEME
     LoadThemeGfx(GFX_UNMOUNT, false);
     DeinitFS();
@@ -76,7 +76,7 @@ u32 UnmountSd()
         if (((pad_state & BUTTON_B) && InitFS()) || (pad_state & (BUTTON_START | BUTTON_HOME | BUTTON_POWER)))
             break;
     }
-    
+
     return pad_state;
 }
 
@@ -92,7 +92,7 @@ void DisplayOptionInfo(MenuEntry *entry)
 
     DrawStringFC(0, 10, false, COLOR_GREEN, "%s:", entry->name);
     DrawStringF(0, 20, false, entry->info);
-    DrawStringF(0, 180, false, "For more information, please read\ngithub.com/d0k3/Decrypt9WIP/tree/master/README.md");
+    DrawStringF(0, 180, false, "For more information, please head to:\ngithub.com/NeroReflex/D9Hack");
     DrawStringF(0, 220, false, "Release Y to continue.");
     while (CheckButton(BUTTON_Y));
 
@@ -109,7 +109,7 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
     u32 menublock_x1 = menublock_x0 - FONT_WIDTH_EXT;
     u32 menublock_y0 = 40;
     u32 menublock_y1 = menublock_y0 + currMenu->n_entries * 10;
-    
+
     if (fullDraw) { // draw full menu
         ClearScreenFull(true, !top_screen);
         DrawStringF(menublock_x0, menublock_y0 - 20, top_screen, "%s", currMenu->name);
@@ -122,13 +122,13 @@ void DrawMenu(MenuInfo* currMenu, u32 index, bool fullDraw, bool subMenu)
         DrawStringF(menublock_x1, SCREEN_HEIGHT - 30, top_screen, "Game directory: %s", (GetGameDir()) ? GetGameDir() : "(not available)");
         DrawStringF(menublock_x1, SCREEN_HEIGHT - 40, top_screen, "Work directory: %s", GetWorkDir());
     }
-    
+
     if (!top_screen)
         DrawStringF(10, 10, true, "Selected: %-*.*s", 32, 32, currMenu->entries[index].name);
-        
+
     for (u32 i = 0; i < currMenu->n_entries; i++) { // draw menu entries / selection []
         char* name = currMenu->entries[i].name;
-        DrawStringFC(menublock_x0, menublock_y0 + (i*10), top_screen, (i == index) ? COLOR_ASK : COLOR_SELECT, 
+        DrawStringFC(menublock_x0, menublock_y0 + (i*10), top_screen, (i == index) ? COLOR_ASK : COLOR_SELECT,
             (i == index) ? "[%s]" : " %s ", name);
     }
 }
@@ -140,10 +140,10 @@ u32 ProcessEntry(MenuEntry* entry)
     bool nand_write = entry->param & N_NANDWRITE;
     bool a9lh_write = (entry->param & N_A9LHWRITE) && ((*(u32*) 0x101401C0) == 0);
     u32 entryColor = COLOR_GREEN;
-    
+
     u32 pad_state;
     u32 res = 0;
-    
+
     // unlock sequence for dangerous features
     if (nand_write || a9lh_write) {
         const u32 unlockSequences[3][5] = {
@@ -170,7 +170,7 @@ u32 ProcessEntry(MenuEntry* entry)
         }
         Debug("");
         Debug("If you wish to proceed, enter:");
-        Debug((emunand) ? "<Left>, <Right>, <Down>, <Up>, <A>" : (a9lh_write) ? "<Right>, <Down>, <Left>, <Down>, <A>" : 
+        Debug((emunand) ? "<Left>, <Right>, <Down>, <Up>, <A>" : (a9lh_write) ? "<Right>, <Down>, <Left>, <Down>, <A>" :
             "<Left>, <Up>, <Right>, <Up>, <A>");
         Debug("");
         Debug("(B to return, START to reboot)");
@@ -192,7 +192,7 @@ u32 ProcessEntry(MenuEntry* entry)
         if (unlockLvl < unlockLvlMax)
             return pad_state;
     }
-    
+
     // execute this entries function
     #ifdef USE_THEME
     LoadThemeGfx(GFX_PROGRESS, false);
@@ -215,7 +215,7 @@ u32 ProcessEntry(MenuEntry* entry)
         }
         #endif
     }
-    
+
     // returns the last known pad_state
     return pad_state;
 }
@@ -246,7 +246,7 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
     u32 menuLvl;
     u32 index = 0;
     u32 result = MENU_EXIT_REBOOT;
-    
+
     #ifndef USE_THEME
     MenuInfo mainMenu;
     if (n_entries_main > 1) {
@@ -279,7 +279,7 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
     LoadThemeGfxMenu(0);
     #endif
     menuLvl = menuLvlMin;
-    
+
     // main processing loop
     while (true) {
         bool full_draw = true;
@@ -338,6 +338,6 @@ u32 ProcessMenu(MenuInfo* info, u32 n_entries_main)
         LoadThemeGfxMenu(((currMenu - info) * 100) + index);
         #endif
     }
-    
+
     return result;
 }

@@ -1,11 +1,9 @@
 # Decrypt9
-_Multipurpose content dumper and decryptor for the Nintendo 3DS_
+_Multipurpose content dumper, decryptor and ramdom features for the Nintendo 3DS!_
 
-## Decrypt9 WIP (work-in-progress) by d0k3 
-
-This is a work in progress fork of Archshifts original Decrypt9, including bleeding edge new features. Note that the names of the executable files for this are Decrypt9WIP.* instead of Decrypt9.*. New features introduced in this will eventually get pulled into [Archshifts repo](https://github.com/archshift/Decrypt9).
-
-You may discuss this work in progress version, help testing, participate in the development and on [GBAtemp](https://gbatemp.net/threads/download-decrypt9-wip-3dsx-launcher-dat.388831/).
+## D9Hack
+This is my __OWN__ version of [Decrypt9WIP](https://github.com/d0k3/Decrypt9).
+It contains bug fixes and features that I feel necessary to me.
 
 ## Decrypt9, Decrypt9WIP, Decrypt9UI - which one to use?
 
@@ -33,12 +31,9 @@ See this incomplete list, more detailed descriptions are found further below.
 
 ## How to run this / entry points
 
-Decrypt9 can be built to run from a number of entry points, descriptions are below. Note that you need to be on or below 3DS firmware version v9.2 for any of these to work. 
-* __A9LH & Brahma__: Copy `Decrypt9.bin` to somewhere on your SD card and run it via either [Brahma](https://github.com/delebile/Brahma2) or [arm9loaderhax](https://github.com/Plailect/Guide/wiki). Brahma derivatives / loaders (such as [BrahmaLoader](https://gbatemp.net/threads/release-easily-load-payloads-in-hb-launcher-via-brahma-2-mod.402857/), [BootCTR](https://gbatemp.net/threads/re-release-bootctr-a-simple-boot-manager-for-3ds.401630/) and [CTR Boot Manager](https://gbatemp.net/threads/ctrbootmanager-3ds-boot-manager-loader-homemenuhax.398383/)) and A9LH chainloaders (such as [Luma3DS](https://github.com/AuroraWright/Luma3DS) and [BootCTR9](https://github.com/hartmannaf/BootCtr9)) will work with this as well. Build this with `make a9lh`.
-* __Homebrew Launcher__: Copy Decrypt9.3dsx & Decrypt9.smdh into /3DS/Decrypt9 on your SD card. Run this via [Smealums Homebrew Launcher](http://smealum.github.io/3ds/), [Mashers Grid Launcher](https://gbatemp.net/threads/release-homebrew-launcher-with-grid-layout.397527/) or any other compatible software. Build this with `make brahma`.
-* __CakeHax Browser__: Copy Decrypt9.dat to the root of your SD card. For MSET also copy Decrypt9.nds to your SD card. You can then run it via http://dukesrg.github.io/?Decrypt9.dat from your 3DS browser. Build this via `make cakehax`.
-* __CakeHax MSET__: Copy Decrypt9.dat to the root of your SD card and Decrypt9.nds to anywhere on the SD card. You can then run it either via MSET and Decrypt9.nds. Build this via `make cakerop`.
-* __Gateway Browser Exploit__: Copy Launcher.dat to your SD card root and run this via http://go.gateway-3ds.com/ from your 3DS browser. Build this with `make gateway`. Please note: __this entrypoint is deprecated__. While it may still work at the present time with little to no problems, bugs will no more be fixed and it may be completely removed at a later time. Use CakeHax instead.
+D9Hack is built for entrypoints I need. You can only hope to find the Boot9Strap and a9lh version (or compatible).
+* __A9LH & Brahma__: Copy `Decrypt9.bin` to somewhere on your SD card and run it via either [Brahma](https://github.com/delebile/Brahma2) or [arm9loaderhax](https://github.com/Plailect/Guide/wiki). Brahma derivatives / loaders (such as [BrahmaLoader](https://gbatemp.net/threads/release-easily-load-payloads-in-hb-launcher-via-brahma-2-mod.402857/), [BootCTR](https://gbatemp.net/threads/re-release-bootctr-a-simple-boot-manager-for-3ds.401630/) and [CTR Boot Manager](https://gbatemp.net/threads/ctrbootmanager-3ds-boot-manager-loader-homemenuhax.398383/)) and A9LH chainloaders (such as [Luma3DS](https://github.com/AuroraWright/Luma3DS) and [BootCTR9](https://github.com/hartmannaf/BootCtr9)) will work with this as well. Build this with `make`.
+
 
 If you are a developer and you are building this, you may also just run `make release` to build all files at once. If you are a user, all files are already included in the release archive. When building this, you may also select to compile with one of four available fonts by appending FONT=ORIG/6X10/ACORN/GB to the make command line parameters.
 
@@ -106,12 +101,12 @@ This category includes all titlekey related features. Decrypted titlekeys (`decT
 * __Titlekey Dump (SysNAND)__: This will find all the titlekeys contained on your SysNAND and dump them, without the additional step of decryption, to `encTitleKeys.bin`.
 * __Titlekey Dump (EmuNAND)__: This will find all the titlekeys contained on your EmuNAND and dump them, without the additional step of decryption, to `encTitleKeys_emu.bin`.
 * __Ticket Dump (SysNAND)__: Use this to dump all tickets found inside your SysNAND ticket.db file. Naming scheme for tickets is (commonkey index)-(console id)-(title id).tik. Commonkey index is typically 0 for eShop titles and 1 for system titles, a console id of zero for eShop titles typically means a forged (= non genuine) ticket. Dumped tickets are installable via [FBI](https://github.com/Steveice10/FBI/releases).
-* __Ticket Dump (EmuNAND)__: Same as above, but uses the ticket.db file from your EmuNAND. 
+* __Ticket Dump (EmuNAND)__: Same as above, but uses the ticket.db file from your EmuNAND.
 
 ### SysNAND / EmuNAND Options
 This is actually two categories in the main menu, but the functionality provided the same (for SysNAND / EmuNAND respectively). These categories include all features that dump, inject, modify or extract information from/to the SysNAND/EmuNAND. For functions that output files to the SD card, the user can choose a filename from a predefined list. For functions that use files from the SD card for input, the user can choose among all candidates existing on the SD card. For an extra layer of safety, critical(!) features - meaning all features that actually introduce change to the NAND - are protected by a warning message and an unlock sequence that the user has to enter. Caution is adviced with these protected features. They should only be used by the informed user.
 * __(Sys/Emu)NAND Backup & Restore...__: This contains multiple options to backup or restore your SysNAND or EmuNAND. The submenu contains the following entries:
-  * __NAND Backup__: Dumps the `NAND.bin` file from your SysNAND or the `ÈmuNAND.bin` file from your EmuNAND. This is a full backup of your 3DS System NAND and can be used to restore your 3DS SysNAND / EmuNAND to a previous state or for modifications. 
+  * __NAND Backup__: Dumps the `NAND.bin` file from your SysNAND or the `ÈmuNAND.bin` file from your EmuNAND. This is a full backup of your 3DS System NAND and can be used to restore your 3DS SysNAND / EmuNAND to a previous state or for modifications.
   * __NAND Backup (minsize)__: Same as the above option, but only dumps the actually used size of the NAND (the remainder is only unused data). Use this instead of the above to save some space on your SD card.
   * __NAND Restore(!)__: This fully restores your SysNAND or EmuNAND from the provided `NAND.bin` file (needs to be in the `/files9/` work folder or in the SD card root). Although backups will be checked before restoring, be careful not to restore a corrupted NAND.bin file. Also note that you won't have access to this feature if your SysNAND is too messed up or on a too high FW version to even start Decrypt9 (should be self explanatory).
   * __NAND Restore (forced)(!)__: Same as the above option, but skips most safety checks. This is not recommended to be used without being properly informed. Keep in mind that, if the above option stops you from restoring a NAND backup, it is normally with good reason and means a prevented brick.
@@ -140,7 +135,7 @@ This is actually two categories in the main menu, but the functionality provided
   * __LocalFriendCodeSeed_B__: _This contains your FriendCodeSeed_ - in theory this can be used to import your friend list to another 3DS.
   * __movable.sed__: _This contains the keyY for decryption of data on the SD card_ - Decrypt9 itself uses this in the SD Decryptor / Encryptor and in SD padgen.
 * __System File Inject...(!)__: This allows you to directly encrypt & inject various files of interest into the SysNAND and EmuNAND. For more information check out the list above.
-* __System Save Dump...__: This allows you to directly dump & decrypt various system saves from your SysNAND and EmuNAND. These files are included in this feature: 
+* __System Save Dump...__: This allows you to directly dump & decrypt various system saves from your SysNAND and EmuNAND. These files are included in this feature:
   * __seedsave.bin__: _Contains the seeds for decryption of 9.6x seed encrypted titles_ - only the seeds for installed (legit, purchased) titles are included in this. Use [SEEDconv](https://gbatemp.net/threads/download-seedconv-seeddb-bin-generator-for-use-with-decrypt9.392856/) (recommended) or the included Python script `seeddb_gen.py` to extract the seeds from this into the Decrypt9 readable `seeddb.bin`.
   * __nagsave.bin__: _Contains some data relating to system updates_ - it is possible to block automatic system updates (ie. the 'update nag') with this file. Research is still in progress. [Read this](https://gbatemp.net/threads/poc-removing-update-nag-on-emunand.399460/page-5#post-5863332) and the posts after it for more information.
   * __nnidsave.bin__: _Contains your NNID data_ - this can be used to reset / remove the NNID from your system, without removing any other data. See [here](https://gbatemp.net/threads/download-decrypt9-open-source-decryption-tools-wip.388831/page-89#post-6000951) for instructions.
@@ -202,12 +197,12 @@ This category includes special features for certain NDS type flashcarts (current
 * __Restore AK2i bootrom__: Restore the AK2i flashcart original bootrom.
 
 ### Maintenance Options
-This category includes special features which allow you to test and manage Decrypt9 internal functionality. 
+This category includes special features which allow you to test and manage Decrypt9 internal functionality.
 * __System Info__: Displays various information about your 3DS and SD card on screen. Used for informational purposes and to test if information is available.
 * __Create Selftest Reference__: Run this first on a known working entrypoint to generate the selftest reference data. This will create a file called `d9_selftest.ref` inside your SD card root or work folder.
 * __Run Selftest__: Run the actual selftest (must have created the reference data before). This will create or update a file called `d9_selftest.lst` on your SD card root or work folder. Note: on O3DS failed `ncch_sec3_key`, `ncch_sec4_key` and `nand_ctrn_key` tests are normal and expected. On O3DS <= FW 7.0, `ncch_7x_key` may fail. On N3DS and O3DS `ncch_sec4_key` may fail. With all key files (see 'Support files') available, no test should fail. This is used, for example, to assure that everything works as intended on a new entrypoint.
 * __Build Key Database__: This is used to build the `aeskeydb.bin` file from all available `slot0x??key?.bin` files. It will also process files that are not used by Decrypt9. With the `aeskeydb.bin`available, Decrypt9 can load keys from it and doesn't need the `slot0x??key?.bin` files anymore.
-* __De/Encrypt Key Database__: By default, the `aeskeydb.bin` created in Decrypt9 is encrypted, and the keys in it are not readable via a Hex Editor. Use this to either decrypt an encrypted database, or to encrypt a decrypted one. Note that Decrypt9 can load keys from both. 
+* __De/Encrypt Key Database__: By default, the `aeskeydb.bin` created in Decrypt9 is encrypted, and the keys in it are not readable via a Hex Editor. Use this to either decrypt an encrypted database, or to encrypt a decrypted one. Note that Decrypt9 can load keys from both.
 
 ## License
 You may use this under the terms of the GNU General Public License GPL v2 or under the terms of any later revisions of the GPL. Refer to the provided `LICENSE.txt` file for further information.
