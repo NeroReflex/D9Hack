@@ -8,7 +8,7 @@ u32 GetHashFromFile(const char* filename, u32 offset, u32 size, u8* hash)
 {
     // uses the standard buffer, so be careful
     u8* buffer = BUFFER_ADDRESS;
-    
+
     if (!FileOpen(filename))
         return 1;
     if (!size) {
@@ -30,28 +30,30 @@ u32 GetHashFromFile(const char* filename, u32 offset, u32 size, u8* hash)
     sha_get(hash);
     ShowProgress(0, 0);
     FileClose();
-    
+
     return 0;
 }
 
 u32 CheckHashFromFile(const char* filename, u32 offset, u32 size, const u8* hash)
 {
     u8 digest[32];
-    
+
     if (GetHashFromFile(filename, offset, size, digest) != 0)
         return 1;
-    
-    return (memcmp(hash, digest, 32) == 0) ? HASH_VERIFIED : HASH_FAILED; 
+
+    return (memcmp(hash, digest, 32) == 0) ? HASH_VERIFIED : HASH_FAILED;
 }
 
 u32 HashVerifyFile(const char* filename)
 {
     char hashname[64];
     u8 hash[32];
-    
+    u8 pretty_hash[64];
+
     snprintf(hashname, 64, "%s.sha", filename);
-    if (FileGetData(hashname, hash, 32, 0) != 32)
+    if (FileGetData(hashname, pretty_hash, sizeof(pretty_hash), 0) != sizeof(pretty_hash))
         return HASH_NOT_FOUND;
-    
+
+    sha_text2sha(hash, sizeof(hash), pretty_hash);
     return CheckHashFromFile(filename, 0, 0, hash);
 }

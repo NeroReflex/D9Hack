@@ -13,7 +13,7 @@
 
 // return values for NAND header check
 #define NAND_HDR_UNK  0 // should be zero
-#define NAND_HDR_O3DS 1 
+#define NAND_HDR_O3DS 1
 #define NAND_HDR_N3DS 2
 
 // minimum sizes for O3DS / N3DS NAND
@@ -92,24 +92,24 @@ u32 CheckEmuNand(void)
     u32 hidden_sectors = NumHiddenSectors();
     if (hidden_sectors > 4 * multi_sectors)
         hidden_sectors = 4 * multi_sectors;
-    
+
     for (u32 offset_sector = 0; offset_sector + nand_size_sectors_min <= hidden_sectors; offset_sector += multi_sectors) {
         // check for RedNAND type EmuNAND
         sdmmc_sdcard_readsectors(offset_sector + 1, 1, buffer);
         if (IS_NAND_HEADER(buffer)) {
-            ret |= EMUNAND_REDNAND << (2 * (offset_sector / multi_sectors)); 
+            ret |= EMUNAND_REDNAND << (2 * (offset_sector / multi_sectors));
             continue;
         }
         // check for Gateway type EmuNAND
         sdmmc_sdcard_readsectors(offset_sector + nand_size_sectors, 1, buffer);
         if ((hidden_sectors > offset_sector + nand_size_sectors) && IS_NAND_HEADER(buffer)) {
-            ret |= EMUNAND_GATEWAY << (2 * (offset_sector / multi_sectors)); 
+            ret |= EMUNAND_GATEWAY << (2 * (offset_sector / multi_sectors));
             continue;
         }
         // EmuNAND ready but not set up
         ret |= EMUNAND_READY << (2 * (offset_sector / multi_sectors));
     }
-    
+
     return ret;
 }
 
@@ -119,7 +119,7 @@ u32 SetNand(bool set_emunand, bool force_emunand)
         u32 emunand_state = CheckEmuNand();
         u32 emunand_count = 0;
         u32 offset_sector = 0;
-        
+
         for (emunand_count = 0; (emunand_state >> (2 * emunand_count)) & 0x3; emunand_count++);
         if (emunand_count > 1) { // multiple EmuNANDs -> use selector
             u32 multi_sectors = GetEmuNandMultiSectors();
@@ -145,7 +145,7 @@ u32 SetNand(bool set_emunand, bool force_emunand)
                 }
             }
         }
-        
+
         if ((emunand_state == EMUNAND_READY) && force_emunand)
             emunand_state = EMUNAND_REDNAND;
         switch (emunand_state) {
@@ -203,32 +203,32 @@ static inline int WriteNandSectors(u32 sector_no, u32 numsectors, u8 *in)
 
 static u32 CheckNandHeaderType(u8* header) {
     u8 lheader[0x200];
-    
+
     if (header != NULL)
         memcpy(lheader, header, 0x200);
     else if (ReadNandSectors(0, 1, lheader) != 0)
         return NAND_HDR_UNK;
-    
+
     if (memcmp(lheader + 0x100, nand_magic_n3ds, 0x60) == 0) {
         return NAND_HDR_N3DS;
     } else if (memcmp(lheader + 0x100, nand_magic_o3ds, 0x60) == 0) {
         return NAND_HDR_O3DS;
-    } 
-    
+    }
+
     return NAND_HDR_UNK;
 }
 
 static u32 CheckNandHeaderIntegrity(u8* header) {
-    
+
     if (!header)
         return 1;
-    
+
     // check header type
     if (CheckNandHeaderType(header) == NAND_HDR_UNK) {
         Debug("NAND header not recognized");
         return 1;
     }
-    
+
     // check if header belongs to console via TWL MBR decryption
     u8 dec_mbr_block[0xA0];
     PartitionInfo* twln = GetPartitionInfo(P_TWLN);
@@ -240,7 +240,7 @@ static u32 CheckNandHeaderIntegrity(u8* header) {
         Debug("NAND header is corrupt or from another 3DS");
         return 1;
     }
-    
+
     // compare with current header
     if (!emunand_header) { // only for SysNAND
         u8 curr_header[0x200];
@@ -253,7 +253,7 @@ static u32 CheckNandHeaderIntegrity(u8* header) {
             return 1;
         }
     }
-    
+
     return 0;
 }
 
@@ -291,14 +291,14 @@ u32 CheckFirmSize(const u8* firm, u32 f_size) {
             }
         }
     }
-    
+
     return f_actualsize;
 }
 
 static u32 CheckNandDumpIntegrity(const char* path, bool check_firm) {
     u8 header[0x200];
     u32 nand_hdr_type = NAND_HDR_UNK;
-    
+
     Debug("Verifying dump via .SHA...");
     u32 hash_res = HashVerifyFile(path);
     if (hash_res == HASH_FAILED) {
@@ -306,17 +306,17 @@ static u32 CheckNandDumpIntegrity(const char* path, bool check_firm) {
         return 1;
     }
     Debug((hash_res == HASH_VERIFIED) ? "Verification passed" : ".SHA not found, skipped");
-    
+
     if (!DebugFileOpen(path))
         return 1;
-    
+
     // size check
     if (FileGetSize() < NAND_MIN_SIZE) {
         FileClose();
         Debug("NAND dump is too small");
         return 1;
     }
-    
+
     // header check
     if(!DebugFileRead(header, 0x200, 0)) {
         FileClose();
@@ -337,9 +337,9 @@ static u32 CheckNandDumpIntegrity(const char* path, bool check_firm) {
             return 1;
         }
     }
-    
+
     // magic number / crypto check
-    for (u32 p_num = 0; p_num < 6; p_num++) { 
+    for (u32 p_num = 0; p_num < 6; p_num++) {
         PartitionInfo* partition = partitions + p_num; // workaround for files, not possible with GetPartitionInfo()
         if ((p_num == 5) && (GetUnitPlatform() == PLATFORM_N3DS)) // special N3DS partition types
             partition = (nand_hdr_type == NAND_HDR_N3DS) ? partitions + 6 : partitions + 7;
@@ -361,7 +361,7 @@ static u32 CheckNandDumpIntegrity(const char* path, bool check_firm) {
             return 1;
         }
     }
-    
+
     // firm hash check
     if (check_firm) {
         for (u32 f_num = 0; f_num < 2; f_num++) {
@@ -384,7 +384,7 @@ static u32 CheckNandDumpIntegrity(const char* path, bool check_firm) {
                 CryptBuffer(&info);
                 firm_size = CheckFirmSize(firm, firm_size);
             }
-            
+
             if (firm_size == 0) {
                 if ((f_num == 0) && ((*(vu32*) 0x101401C0) == 0)) {
                     Debug("FIRM0 is corrupt (non critical)");
@@ -397,10 +397,10 @@ static u32 CheckNandDumpIntegrity(const char* path, bool check_firm) {
             }
         }
     }
-    
+
     FileClose();
-    
-    
+
+
     return 0;
 }
 
@@ -408,22 +408,22 @@ u32 OutputFileNameSelector(char* filename, const char* basename, char* extension
     char bases[4][64] = { 0 };
     char serial[16] = { 0 };
     char* dotpos = NULL;
-    
+
     // build first base name and extension
     strncpy(bases[0], basename, 63);
     dotpos = strrchr(bases[0], '.');
-    
+
     if (dotpos) {
         *dotpos = '\0';
         if (!extension)
             extension = dotpos + 1;
     }
-    
+
     // build other two base names
     snprintf(bases[1], 63, "%s_%s", (GetSerial(serial) == 0) ? serial : "UNK", bases[0]);
     snprintf(bases[2], 63, "%s_%s", bases[0], (emunand_header) ? "emu" : "sys");
     snprintf(bases[3], 63, "%s%s" , (emunand_header) ? "emu" : "sys", bases[0]);
-    
+
     u32 fn_id = (emunand_header) ? 1 : 0;
     u32 fn_num = 0;
     bool exists = false;
@@ -457,7 +457,7 @@ u32 OutputFileNameSelector(char* filename, const char* basename, char* extension
             return 2;
         }
     }
-    
+
     // overwrite confirmation
     if (exists) {
         DebugColor(COLOR_ASK, "Press <A> to overwrite existing file");
@@ -471,7 +471,7 @@ u32 OutputFileNameSelector(char* filename, const char* basename, char* extension
             }
         }
     }
-    
+
     return 0;
 }
 
@@ -479,7 +479,7 @@ u32 InputFileNameSelector(char* filename, const char* basename, char* extension,
     char** fnptr = (char**) 0x20400000; // allow using 0x8000 byte
     char* fnlist = (char*) 0x20408000; // allow using 0x80000 byte
     u32 n_names = 0;
-    
+
     // get base name, extension
     char base[64] = { 0 };
     if (basename != NULL) {
@@ -492,18 +492,18 @@ u32 InputFileNameSelector(char* filename, const char* basename, char* extension,
                 extension = dotpos + 1;
         }
     }
-    
+
     // limit magic number size
     if (msize > 0x200)
         msize = 0x200;
-    
+
     // pass #1 -> work dir
     // pass #2 -> root dir
     for (u32 i = 0; i < 2; i++) {
         // get the file list - try work directory first
         if (!GetFileList((i) ? "/" : GetWorkDir(), fnlist, 0x80000, false, true, false))
             continue;
-        
+
         // parse the file names list for usable entries
         for (char* fn = strtok(fnlist, "\n"); fn != NULL; fn = strtok(NULL, "\n")) {
             u8 data[0x200];
@@ -550,7 +550,7 @@ u32 InputFileNameSelector(char* filename, const char* basename, char* extension,
         Debug("No usable file found");
         return 1;
     }
-    
+
     u32 index = 0;
     DebugColor(COLOR_ASK, "Use arrow keys and <A> to choose a file");
     while (true) {
@@ -569,14 +569,14 @@ u32 InputFileNameSelector(char* filename, const char* basename, char* extension,
             return 2;
         }
     }
-    
+
     return 0;
 }
 
 PartitionInfo* GetPartitionInfo(u32 partition_id)
 {
     u32 partition_num = 0;
-    
+
     if (partition_id & P_CTRNAND) {
         partition_num = (CheckNandHeaderType(NULL) == NAND_HDR_O3DS) ? 5 : 6;
     } else if (partition_id & P_CTRFULL) {
@@ -584,7 +584,7 @@ PartitionInfo* GetPartitionInfo(u32 partition_id)
     } else {
         for(; !(partition_id & (1<<partition_num)) && (partition_num < 32); partition_num++);
     }
-    
+
     return (partition_num >= 32) ? NULL : &(partitions[partition_num]);
 }
 
@@ -593,23 +593,23 @@ u32 GetNandCtr(u8* ctr, u32 offset)
     static bool initial_setup_done = false;
     static u8 CtrNandCtr[16];
     static u8 TwlNandCtr[16];
-    
+
     if (!initial_setup_done) {
         // calculate CTRNAND/TWL ctr from NAND CID
         u8 NandCid[16];
         u8 shasum[32];
-        
+
         sdmmc_get_cid(1, (uint32_t*) NandCid);
         sha_quick(shasum, NandCid, 16, SHA256_MODE);
         memcpy(CtrNandCtr, shasum, 16);
-        
+
         sha_quick(shasum, NandCid, 16, SHA1_MODE);
         for(u32 i = 0; i < 16; i++) // little endian and reversed order
             TwlNandCtr[i] = shasum[15-i];
-        
+
         initial_setup_done = true;
     }
-    
+
     // get the correct CTR and increment counter
     memcpy(ctr, (offset >= 0x0B100000) ? CtrNandCtr : TwlNandCtr, 16);
     add_ctr(ctr, offset / 0x10);
@@ -622,7 +622,7 @@ u32 DecryptNandToMem(u8* buffer, u32 offset, u32 size, PartitionInfo* partition)
     CryptBufferInfo info = {.keyslot = partition->keyslot, .setKeyY = 0, .size = size, .buffer = buffer, .mode = partition->mode};
     if(GetNandCtr(info.ctr, offset) != 0)
         return 1;
-    
+
     if (offset % NAND_SECTOR_SIZE) {
         Debug("Bad NAND offset alignment");
         return 1;
@@ -646,7 +646,7 @@ u32 DecryptNandToFile(const char* filename, u32 offset, u32 size, PartitionInfo*
 
     if (!DebugCheckFreeSpace(size))
         return 1;
-    
+
     if (!DebugFileCreate(filename, true))
         return 1;
 
@@ -678,19 +678,19 @@ u32 DumpNand(u32 param)
     u8* buffer = BUFFER_ADDRESS;
     u32 nand_size = (param & NB_MINSIZE) ? NAND_MIN_SIZE : getMMCDevice(0)->total_size * NAND_SECTOR_SIZE;
     u32 result = 0;
-    
-    
+
+
     // check actual EmuNAND size
     if (emunand_header && (emunand_offset + getMMCDevice(0)->total_size > NumHiddenSectors()))
         nand_size = NAND_MIN_SIZE;
-    
+
     Debug("Dumping %sNAND. Size (MB): %u", (param & N_EMUNAND) ? "Emu" : "Sys", nand_size / (1024 * 1024));
-    
+
     if (OutputFileNameSelector(filename, (param & NB_MINSIZE) ? "NANDmin.bin" : "NAND.bin", NULL) != 0)
         return 2;
     if (!DebugFileCreate(filename, true))
         return 1;
-    
+
     if (!DebugCheckFreeSpace(nand_size))
         return 1;
 
@@ -713,14 +713,23 @@ u32 DumpNand(u32 param)
     if (FileGetSize() < NAND_MIN_SIZE) result = 1; // very improbable
     ShowProgress(0, 0);
     FileClose();
-    
+
     if (result == 0) {
         char hashname[64];
         u8 shasum[32];
+
         sha_get(shasum);
         Debug("NAND dump SHA256: %08X...", getbe32(shasum));
-        snprintf(hashname, 64, "%s.sha", filename);
-        Debug("Store to %s: %s", hashname, (FileDumpData(hashname, shasum, 32) == 32) ? "ok" : "failed");
+        snprintf(hashname, sizeof(hashname), "%s.sha", filename);
+
+        // get the pretty sha256 format... Like the sha256sum linux util...
+        u8 shaFile[128];
+        memset(shaFile, 0x00, sizeof(shaFile));
+        sha_hex2text(shasum, sizeof(shasum), shaFile);
+        snprintf(shaFile + strlen(shaFile), sizeof(shaFile) - strlen(shaFile), "  %s\t\n", filename);
+
+        // ... and write sha to file
+        Debug("Store to %s: %s", hashname, (FileDumpData(hashname, shaFile, strlen(shaFile)) == strlen(shaFile)) ? "ok" : "failed");
     }
 
     return result;
@@ -732,7 +741,7 @@ u32 GetNandHeader(u8* header)
         Debug("%sNAND read error", (emunand_header) ? "Emu" : "Sys");
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -740,12 +749,12 @@ u32 DumpNandHeader(u32 param)
 {
     char filename[64];
     u8* header = BUFFER_ADDRESS;
-    
+
     Debug("Dumping %sNAND header. Size (Byte): 512", (param & N_EMUNAND) ? "Emu" : "Sys");
-    
+
     if (!DebugCheckFreeSpace(512))
         return 1;
-    
+
     if (OutputFileNameSelector(filename, "NAND_hdr.bin", NULL) != 0)
         return 1;
 
@@ -764,11 +773,11 @@ u32 DecryptNandPartition(u32 param)
     PartitionInfo* p_info = NULL;
     char filename[64];
     u8 magic[NAND_SECTOR_SIZE];
-    
+
     p_info = GetPartitionInfo(param);
     if (p_info == NULL)
         return 1;
-    
+
     Debug("Dumping & Decrypting %s, size (MB): %u", p_info->name, p_info->size / (1024 * 1024));
     if (DecryptNandToMem(magic, p_info->offset, 16, p_info) != 0)
         return 1;
@@ -780,7 +789,7 @@ u32 DecryptNandPartition(u32 param)
     }
     if (OutputFileNameSelector(filename, p_info->name, "bin") != 0)
         return 1;
-    
+
     return DecryptNandToFile(filename, p_info->offset, p_info->size, p_info, NULL);
 }
 
@@ -790,18 +799,18 @@ u32 DecryptSector0x96(u32 param)
     u8* sector0x96 = BUFFER_ADDRESS;
     CryptBufferInfo info = {.keyslot = 0x11, .setKeyY = 0, .size = 0x200, .buffer = sector0x96, .mode = AES_CNT_ECB_DECRYPT_MODE};
     char filename[64];
-    
+
     // setup key 0x11
     if (SetupSector0x96Key0x11() != 0)
         return 1;
-    
+
     // read & decrypt encrypted sector0x96
     if (ReadNandSectors(0x96, 1, sector0x96) != 0) {
         Debug("%sNAND read error", (emunand_header) ? "Emu" : "Sys");
         return 1;
     }
     CryptBuffer(&info);
-    
+
     // write to file
     if (OutputFileNameSelector(filename, "sector0x96.bin", NULL) != 0)
         return 1;
@@ -809,7 +818,7 @@ u32 DecryptSector0x96(u32 param)
         Debug("Error writing file");
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -818,7 +827,7 @@ u32 EncryptMemToNand(u8* buffer, u32 offset, u32 size, PartitionInfo* partition)
     CryptBufferInfo info = {.keyslot = partition->keyslot, .setKeyY = 0, .size = size, .buffer = buffer, .mode = partition->mode};
     if(GetNandCtr(info.ctr, offset) != 0)
         return 1;
-    
+
     if (offset % NAND_SECTOR_SIZE) {
         Debug("Bad NAND offset alignment");
         return 1;
@@ -842,7 +851,7 @@ u32 EncryptFileToNand(const char* filename, u32 offset, u32 size, PartitionInfo*
 
     if (!DebugFileOpen(filename))
         return 1;
-    
+
     u32 fsize = FileGetSize();
     if (fsize != size) {
         if (align(fsize, NAND_SECTOR_SIZE) == align(size, NAND_SECTOR_SIZE)) {
@@ -884,24 +893,24 @@ u32 RestoreNand(u32 param)
         return 1;
     if (!(param & N_EMUNAND) && !(param & NR_KEEPA9LH) && !(param & N_A9LHWRITE))
         return 1;
-        
+
     // user file select
     if (InputFileNameSelector(filename, "NAND.bin", NULL, NULL, 0, NAND_MIN_SIZE, true) != 0)
         return 1;
-    
+
     // check if actually on A9LH for the special option
     if (!emunand_header && (param & NR_KEEPA9LH) && (*(u32*) 0x101401C0) != 0) {
         Debug("A9LH not detected, use regular restore");
         return 1;
     }
-    
+
     // safety checks
     if (!(param & NR_NOCHECKS)) {
         Debug("Validating NAND dump %s...", filename);
         if (CheckNandDumpIntegrity(filename, !(param & NR_KEEPA9LH)) != 0)
             return 1;
     }
-    
+
     // check EmuNAND partition size
     if (emunand_header) {
         if (((NumHiddenSectors() - emunand_offset) < (NAND_MIN_SIZE / NAND_SECTOR_SIZE)) || (NumHiddenSectors() < emunand_header)) {
@@ -912,7 +921,7 @@ u32 RestoreNand(u32 param)
             nand_size = NAND_MIN_SIZE;
         }
     }
-    
+
     // open file, adjust size if required
     // NAND dump has at least min size (checked 2x at this point)
     if (!FileOpen(filename))
@@ -921,7 +930,7 @@ u32 RestoreNand(u32 param)
         Debug("Small NAND backup, using minimum size...");
         nand_size = NAND_MIN_SIZE;
     }
-    
+
     Debug("Restoring %sNAND. Size (MB): %u", (param & N_EMUNAND) ? "Emu" : "Sys", nand_size / (1024 * 1024));
 
     u32 n_sectors = nand_size / NAND_SECTOR_SIZE;
@@ -977,7 +986,7 @@ u32 RestoreNand(u32 param)
 u32 PutNandHeader(u8* header)
 {
     u8 header_old[0x200];
-    
+
     if (header != NULL) { // if header for injection is provided
         // make a backup of the genuine header @0x400 (if genuine) first
         if ((ReadNandSectors(0, 1, header_old) == 0) && (CheckNandHeaderIntegrity(header_old) == 0))
@@ -992,13 +1001,13 @@ u32 PutNandHeader(u8* header)
         // provide old header for write
         header = header_old;
     }
-    
+
     // write provided header
     if (WriteNandSectors(0, 1, header) != 0) {
         Debug("%sNAND write error", (emunand_header) ? "Emu" : "Sys");
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -1011,8 +1020,8 @@ u32 RestoreNandHeader(u32 param)
     if (!(param & N_NANDWRITE))
         return 1;
     if (!(param & N_EMUNAND) && !(param & N_A9LHWRITE))
-        return 1;  
-        
+        return 1;
+
     // user file select
     if (InputFileNameSelector(filename, "NAND_hdr.bin", NULL, NULL, 0, 512, false) != 0)
         return 1;
@@ -1029,7 +1038,7 @@ u32 RestoreNandHeader(u32 param)
             return 1;
         }
     }
-    
+
     Debug("Restoring %sNAND header. Size (Byte): 512", (param & N_EMUNAND) ? "Emu" : "Sys");
     if (PutNandHeader(header) != 0)
         return 1;
@@ -1043,24 +1052,24 @@ u32 InjectNandPartition(u32 param)
     u8 header[NAND_SECTOR_SIZE];
     char filename[64];
     bool is_firm = param & (P_FIRM0|P_FIRM1);
-    
+
     // developer screwup protection
     if (!(param & N_NANDWRITE))
         return 1;
     if (is_firm && !(param & N_EMUNAND) && !(param & N_A9LHWRITE))
         return 1;
-    
+
     p_info = GetPartitionInfo(param);
     if (p_info == NULL)
         return 1;
-    
+
     Debug("Encrypting & Injecting %s, size (MB): %u", p_info->name, p_info->size / (1024 * 1024));
     // User file select
     if (InputFileNameSelector(filename, p_info->name, "bin",
         p_info->magic, (p_info->magic[0] != 0xFF) ? 8 : 0,
         is_firm ? 0x200 : p_info->size, is_firm ? true : false) != 0)
         return 1;
-    
+
     // Encryption check
     if (DecryptNandToMem(header, p_info->offset, 16, p_info) != 0)
         return 1;
@@ -1070,7 +1079,7 @@ u32 InjectNandPartition(u32 param)
             Debug("(or slot0x05keyY not set up)");
         return 1;
     }
-    
+
     // FIRM check
     if (is_firm) {
         if (!FileOpen(filename))
@@ -1090,7 +1099,7 @@ u32 InjectNandPartition(u32 param)
             return EncryptFileToNand(filename, p_info->offset, file_size, p_info);
         }
     }
-    
+
     return EncryptFileToNand(filename, p_info->offset, p_info->size, p_info);
 }
 
@@ -1114,19 +1123,19 @@ u32 InjectSector0x96(u32 param)
     CryptBufferInfo info = {.keyslot = 0x11, .setKeyY = 0, .size = 0x200, .buffer = sector0x96, .mode = AES_CNT_ECB_ENCRYPT_MODE};
     char filename[64];
     u8 sha256sum[32];
-    
+
     // developer screwup protection
     if (!(param & N_NANDWRITE))
         return 1;
     if (!(param & N_EMUNAND) && !(param & N_A9LHWRITE))
         return 1;
-    
+
     // read from file
     if (InputFileNameSelector(filename, "sector0x96.bin", NULL, NULL, 0, 0x200, false) != 0)
         return 1;
     if (FileGetData(filename, sector0x96, 0x200, 0) != 0x200)
         return 1;
-    
+
     // check loaded sector
     sha_quick(sha256sum, sector0x96, 0x200, SHA256_MODE);
     if (memcmp(sha256sum, sectorHash, 32) == 0) {
@@ -1147,18 +1156,18 @@ u32 InjectSector0x96(u32 param)
             }
         }
     }
-        
+
     // setup key 0x11
     if (SetupSector0x96Key0x11() != 0)
         return 1;
-    
+
     // encrypt & write encrypted sector0x96
     CryptBuffer(&info);
     if (WriteNandSectors(0x96, 1, sector0x96) != 0) {
         Debug("%sNAND write error", (emunand_header) ? "Emu" : "Sys");
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -1170,29 +1179,29 @@ u32 DumpGbaVcSave(u32 param)
     u8* agbsave = BUFFER_ADDRESS;
     u32 save_size = 0;
     char filename[64];
-    
+
     if (CheckKeySlot(0x24, 'Y')) {
         Debug("slot0x24KeyY not set up");
         return 1;
     }
-    
+
     Debug("Dumping & Decrypting GBA VC Save...");
     if (DecryptNandToMem(agbsave, p_info->offset, p_info->size, p_info) != 0)
         return 1;
-    
+
     // check AGBSAVE header
     if (memcmp(agbsave, magic, 8) != 0) {
         Debug("AGBSAVE is corrupted or empty");
         return 1;
     }
-    
+
     // get save size
     save_size = getle32(agbsave + 0x54);
     if (save_size + 0x200 > p_info->size) {
         Debug("Bad save size");
         return 1;
     }
-    
+
     // check CMAC
     u8 cmac[16] __attribute__((aligned(32)));
     u8 shasum[32];
@@ -1201,7 +1210,7 @@ u32 DumpGbaVcSave(u32 param)
     aes_cmac(shasum, cmac, 2);
     if (memcmp(agbsave + 0x10, cmac, 16) != 0)
         Debug("Warning: current CMAC does not match");
-    
+
     // dump the file
     if (OutputFileNameSelector(filename, "gbavc.sav", NULL) != 0)
         return 1;
@@ -1209,7 +1218,7 @@ u32 DumpGbaVcSave(u32 param)
         Debug("Error writing file");
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -1221,49 +1230,49 @@ u32 InjectGbaVcSave(u32 param)
     u8* agbsave = BUFFER_ADDRESS;
     u32 save_size = 0;
     char filename[64];
-    
+
     if (!(param & N_NANDWRITE)) // developer screwup protection
         return 1;
-    
+
     if (CheckKeySlot(0x24, 'Y')) {
         Debug("slot0x24KeyY not set up");
         return 1;
     }
-    
+
     if (DecryptNandToMem(agbsave, p_info->offset, 0x200, p_info) != 0)
         return 1;
-    
+
     // check AGBSAVE header
     if (memcmp(agbsave, magic, 8) != 0) {
         Debug("AGBSAVE is corrupted or empty");
         return 1;
     }
-    
+
     // get save size
     save_size = getle32(agbsave + 0x54);
     if (save_size + 0x200 > p_info->size) {
         Debug("Bad save size");
         return 1;
     }
-    
+
     // get the save from file
     Debug("Encrypting & Injecting GBA VC Save...");
     if (InputFileNameSelector(filename, "gbavc.sav", NULL, NULL, 0, save_size, true) != 0)
         return 1;
     if (FileGetData(filename, agbsave + 0x200, save_size, 0) != save_size)
         return 1;
-    
+
     // fix CMAC
     u8* cmac = agbsave + 0x10;
     u8 shasum[32];
     sha_quick(shasum, agbsave + 0x30, (0x200 - 0x30) + save_size, SHA256_MODE);
     use_aeskey(0x24);
     aes_cmac(shasum, cmac, 2);
-    
+
     // set CFG_BOOTENV = 0x7 so the save is taken over
     // https://www.3dbrew.org/wiki/CONFIG_Registers#CFG_BOOTENV
     *(u32*) 0x10010000 = 0x7;
-    
+
     // inject to AGBSAVE partition
     return EncryptMemToNand(agbsave, p_info->offset, p_info->size, p_info);
 }
@@ -1274,12 +1283,12 @@ u32 DecryptFirmArm9Mem(u8* firm, u32 f_size)
         0x42, 0xC3, 0xB3, 0x7A, 0xD6, 0x0F, 0x49, 0x43, 0xA4, 0x01, 0x38, 0x77, 0x81, 0xD4, 0xC0, 0x53,
         0x4E, 0x4A, 0xE4, 0x5B, 0x64, 0x39, 0xEC, 0x69, 0x6C, 0xB0, 0xBD, 0x55, 0x11, 0x34, 0x29, 0xF1
     };
-    
+
     if (!CheckFirmSize(firm, f_size)) {
         Debug("FIRM is corrupt");
         return 1;
     }
-    
+
     // search for encrypted arm9 binary
     CryptBufferInfo info = {.keyslot = 0x11, .setKeyY = 0, .size = 16, .mode = AES_CNT_ECB_DECRYPT_MODE};
     if (SetupSecretKey0x11(0) != 0)
@@ -1306,27 +1315,27 @@ u32 DecryptFirmArm9Mem(u8* firm, u32 f_size)
             break;
         }
     }
-    
+
     Debug("FIRM size: %u Byte", f_size);
-    
+
     if (section > 4) {
         Debug("Encrypted ARM9 binary: not found!");
         return 1;
     }
-    
+
     Debug("Encrypted ARM9 binary: section %u", section);
     Debug("Section %u: %u Byte @ 0x%06X", section, bin_size, arm9bin - firm);
-    
+
     u32 crypto_type = (arm9bin[0x53] == 0xFF) ? 0 : (arm9bin[0x53] == '1') ? 1 : 2;
     Debug("Crypto Type: %s", (crypto_type == 0) ? "< 9.5" : (crypto_type == 1) ? "9.5" : ">= 9.6");
-    
+
     // get keyY0x15, setup key0x15
     u8* keyY0x15 = arm9bin + 0x10;
     setup_aeskeyX(0x15, keyX0x15);
     setup_aeskeyY(0x15, keyY0x15);
     use_aeskey(0x15);
     Debug("0x15 KeyX & KeyY: decrypted, set up");
-    
+
     // key0x16 setup
     if (crypto_type) { // for FWs >= 9.5
         u8* keyX0x16 = arm9bin + 0x60;
@@ -1340,7 +1349,7 @@ u32 DecryptFirmArm9Mem(u8* firm, u32 f_size)
         use_aeskey(0x16);
         Debug("0x16 KeyX & KeyY: decrypted, set up");
     }
-    
+
     // get arm9 binary size
     u32 arm9bin_size = 0;
     for (u32 i = 0; (i < 8) && *(arm9bin + 0x30 + i); i++)
@@ -1349,7 +1358,7 @@ u32 DecryptFirmArm9Mem(u8* firm, u32 f_size)
         Debug("Bad arm9 binary size (%u Byte)", arm9bin_size);
         return 1;
     }
-    
+
     // decrypt arm9 binary
     Debug("Decrypting arm9 binary (%u Byte)...", arm9bin_size);
     info.buffer = arm9bin + 0x800;
@@ -1358,13 +1367,13 @@ u32 DecryptFirmArm9Mem(u8* firm, u32 f_size)
     info.keyslot = (crypto_type) ? 0x16 : 0x15;
     memcpy(info.ctr, arm9bin + 0x20, 16);
     CryptBuffer(&info);
-    
+
     // recalculate section hash
     sha_quick(firm + 0x40 + 0x10 + (0x30*section), arm9bin, bin_size, SHA256_MODE);
-    
+
     // mark FIRM as decrypted
     memcpy(firm, (u8*) "FIRMDEC", 7);
-    
+
     return 0;
 }
 
@@ -1375,29 +1384,29 @@ u32 DecryptFirmArm9File(u32 param)
     u8* firm = BUFFER_ADDRESS;
     u32 f_size = 0;
     char filename[64];
-    
+
     // user file select
     if (InputFileNameSelector(filename, NULL, "bin", magic, 8, 0x200, true) != 0)
         return 1;
-    
+
     // open file, check size
     f_size = FileGetData(filename, firm, 0x400000, 0);
     if (f_size >= 0x400000) {
         Debug("File is >= 4MB"); // 4MB is the maximum
         return 1;
     }
-    
+
     // decrypt ARM9 binary (if encrypted)
     if (DecryptFirmArm9Mem(firm, f_size) != 0)
         return 1;
-    
+
     // inject back
     Debug("Done, injecting back..");
     if (FileDumpData(filename, firm, f_size) != f_size) {
         Debug("Error writing file");
         return 1;
     }
-    
+
     return 0;
 }
 
@@ -1405,13 +1414,13 @@ u32 ValidateNandDump(u32 param)
 {
     (void) (param); // param is unused here
     char filename[64];
-        
+
     // user file select
     if (InputFileNameSelector(filename, "NAND.bin", NULL, NULL, 0, NAND_MIN_SIZE, true) != 0)
         return 1;
     Debug("Validating NAND dump %s...", filename);
     if (CheckNandDumpIntegrity(filename, true) != 0)
         return 1;
-    
+
     return 0;
 }

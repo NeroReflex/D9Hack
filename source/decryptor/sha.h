@@ -26,3 +26,5 @@ void sha_init(u32 mode);
 void sha_update(const void* src, u32 size);
 void sha_get(void* res);
 void sha_quick(void* res, const void* src, u32 size, u32 mode);
+void sha_hex2text(u8* hash, u8 hashLength, u8* out);
+void sha_text2sha(u8* hash, u8 hashLength, u8* in);
